@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!-- This template is for creating an Internet Draft using xml2rfc,
+    which is available here: http://xml.resource.org. -->
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+<!-- One method to get references from the online citation libraries.
+    There has to be one entity for each item to be referenced. 
+    An alternate method (rfc include) is described in the references. -->
+
+<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC7665 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7665.xml">
+<!ENTITY I-D.draft-ooamdt-rtgwg-demand-cc-cv SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-ooamdt-rtgwg-demand-cc-cv-00.xml">
+
+]>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<!-- used by XSLT processors -->
+<!-- For a complete list and description of processing instructions (PIs), 
+    please see http://xml.resource.org/authoring/README.html. -->
+<!-- Below are generally applicable Processing Instructions (PIs) that most I-Ds might want to use.
+    (Here they are set differently than their defaults in xml2rfc v1.32) -->
+<?rfc strict="yes" ?>
+<!-- give errors regarding ID-nits and DTD validation -->
+<!-- control the table of contents (ToC) -->
+<?rfc toc="yes"?>
+<!-- generate a ToC -->
+<?rfc tocdepth="4"?>
+<!-- the number of levels of subsections in ToC. default: 3 -->
+<!-- control references -->
+<?rfc symrefs="yes"?>
+<!-- use symbolic references tags, i.e, [RFC2119] instead of [1] -->
+<?rfc sortrefs="yes" ?>
+<!-- sort the reference entries alphabetically -->
+<!-- control vertical white space 
+    (using these PIs as follows is recommended by the RFC Editor) -->
+<?rfc compact="yes" ?>
+<!-- do not start each main section on a new page -->
+<?rfc subcompact="no" ?>
+<!-- keep one blank line between list items -->
+<!-- end of list of popular I-D processing instructions -->
+<rfc category="info" docName="draft-dolson-sfc-oam-sff-sf-cv-00" ipr="trust200902">
+ <!-- category values: std, bcp, info, exp, and historic
+    ipr values: trust200902, noModificationTrust200902, noDerivativesTrust200902,
+       or pre5378Trust200902
+    you can add the attributes updates="NNNN" and obsoletes="NNNN" 
+    they will automatically be output with "(if approved)" -->
+
+ <!-- ***** FRONT MATTER ***** -->
+
+ <front>
+   <!-- The abbreviated title is used in the page header - it is only necessary if the 
+        full title is longer than 39 characters -->
+
+   <title abbrev="NSH SFF-SF Connectivity Verification">OAM Mechanism for SFF-SF Connectivity Verification</title>
+
+   <!-- add 'role="editor"' below for the editors if appropriate -->
+
+   <!-- Another author who claims to be an editor -->
+
+    <author fullname="David Dolson" initials="D." surname="Dolson">
+      <organization>Sandvine</organization>
+      <address>
+        <postal>
+          <street>408 Albert Street</street>
+          <city>Waterloo</city>
+          <region>ON</region>
+          <code>N2L 3V3</code>
+          <country>Canada</country>
+        </postal>
+        <phone>+1 519 880 2400</phone>
+        <email>ddolson@sandvine.com</email>
+      </address>
+    </author>
+    <author fullname="Kyle Larose" initials="K." surname="Larose">
+      <organization>Sandvine</organization>
+      <address>
+        <postal>
+          <street>408 Albert Street</street>
+          <city>Waterloo</city>
+          <region>ON</region>
+          <code>N2L 3V3</code>
+          <country>Canada</country>
+        </postal>
+        <phone>+1 519 880 2400</phone>
+        <email>klarose@sandvine.com</email>
+      </address>
+    </author>
+
+   <date year="2016" />
+
+   <!-- If the month and year are both specified and are the current ones, xml2rfc will fill 
+        in the current day for you. If only the current year is specified, xml2rfc will fill 
+	 in the current day and month for you. If the year is not the current one, it is 
+	 necessary to specify at least a month (xml2rfc assumes day="1" if not specified for the 
+	 purpose of calculating the expiry date).  With drafts it is normally sufficient to 
+	 specify just the year. -->
+
+   <!-- Meta-data Declarations -->
+
+   <area>Routing</area>
+
+   <workgroup>Internet Engineering Task Force</workgroup>
+
+   <!-- WG name at the upperleft corner of the doc,
+        IETF is fine for individual submissions.  
+	 If this element is not present, the default is "Network Working Group",
+        which is used by the RFC Editor as a nod to the history of the IETF. -->
+
+   <keyword>IETF</keyword>
+
+   <!-- Keywords will be incorporated into HTML output
+        files in a meta tag but they have no effect on text or nroff
+        output. If you submit your draft to the RFC Editor, the
+        keywords will be used for the search engine. -->
+
+   <abstract>
+     <t>This document describes a mechanism and packet format for
+        allowing a Service Function Forwarder (SFF) to verify
+        connectivity of an connected SFF or Service Function (SF).
+     </t>
+   </abstract>
+ </front>
+
+ <middle>
+   <section title="Introduction">
+     <t>As described in Service Function Chaining (SFC) Architecture <xref target="RFC7665"/>,
+        Service Function Forwarders (SFFs) are responsible for forwarding
+        traffic to connected Service Functions (SFs).
+     </t>
+     <t>We believe there is a need for the SFFs to monitor connectivity to the SFs
+        at the NSH layer.
+       Rather than have the SFFs simply ping each SF's IP stack, we believe
+       it is important to test NSH connectivity because the two protocols
+       (IP and NSH) are often handled by different hardware or code modules.
+     </t>
+     <t>As an example, an SFF may wish to health-check multiple connected SFs
+        prior to load-balancing NSH traffic to the SFs, having the
+        means to automatically remove unreachable SFs from service.
+     </t>
+     <t>This document proposes an NSH OAM format allowing an SFF to request
+        a neighboring SF to respond to an echo request via NSH encapsulation.
+        This format can also be used for an SFF to request an neighboring SFF
+        to respond to an echo request.
+     </t>
+     <t>Note that this connectivity checking is NOT to be confused with path verification.
+        It is in fact a feature of this mechanism that no path forwarding needs
+        to be configured to perform the connectivity verification.
+     </t>
+     <t>
+        This document proposes use of the format of continuity check proposed in
+        <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/> to be used within
+        NSH frames for SFF-to-SF connectivity verification.
+     </t>
+   </section>
+
+   <!-- This PI places the pagebreak correctly (before the section title) in the text output. -->
+
+   <?rfc needLines="8" ?>
+
+   <section title="SFF-SF Connectivity Verification">
+
+   <t>
+     An SFF may determine connectivity to an SF by means of 
+     echo request/response. However, any two NSH nodes could
+     verify connectivity by the following mechanism.
+   </t>
+   <t>
+     By embedding the overlay ping packet format <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/> 
+     in NSH, the packet format is that of <xref target="fig_packet"/>.
+     The MD-type 2 is shown, since no metadata is required.
+   </t>
+
+      <figure anchor="fig_packet"
+              title="OAM Ping Encapsulated within NSH">
+       <artwork><![CDATA[
+ 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ \
+|Ver|O|C|R|R|R|R|R|R|  Length=2 |  MD-type=0x2  | OAM Proto=TBA1| |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ | NSH
+|          Service Path ID=0xffffff             | SI=0xff       | |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ /
+|         Version Number        |         Global Flags          | \
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+| Message Type  |   Reply mode  |  Return Code  | Return S.code | |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ | OAM
+|                        Sender's Handle                        | | Ping
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
+|                         Sequence Number                       | |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ /
+|                             TLVs                              | |
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ /
+           ]]></artwork>
+     </figure>
+
+     <t>The fields are:
+     <list>
+       <t>Length: Header length in words  </t>
+       <t>MD-type: metadata type of 2 is used because no metadata is required.</t>
+       <t>OAM Protocol: a value of TBA1 indicates the NSH header is followed by
+          an OAM Ping message.</t>
+       <t>Service Path ID: Should be set by sender to 0xffffff. Receiver should ignore it.</t>
+       <t>Service Index: Should be set by sender to 255. Receiver should ignore it.</t>
+       <t>Version Number: refer to <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/>  </t>
+       <t>Global Flags: refer to <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/>  </t>
+       <t>Message Type: Initiator (SFF) is to use the code for "Overlay Echo Request"
+           and responder (SF) is to use the code for "Overlay Echo Reply" <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/>  </t>
+       <t>Reply Mode: code for "Reply to Sender" <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/> (requires extension)</t>
+       <t>Return Code: Unused at this time. MUST be ignored by initiator and responder.</t>
+       <t>Return Subcode: Unused at this time. MUST be ignored by initiator and responder.</t>
+       <t>Sender's Handle: an arbitrary handle chosen by the initiator, to be echoed by the responder.
+          This value is generally constant across requests and may be useful for
+          identifying the initiator in a debugging situation.</t>
+       <t>Sequence Number: a number chosen by the initiator, to be echoed by the responder.
+          This value is generally incremeted by 1 between requests and may be useful
+          for debugging packet loss counts.</t>
+       <t>TLVs: The initiator may place any TLVs. The responder MUST
+          echo back the TLVs verbatim unless TLVs are specifically
+          defined otherwise.
+          No OAM TLVs are required for this connectivity verification.
+          However, (a) timestamp TLVs are expected to be useful for the sender
+          to measure round-trip time; (b) large padding TLVs are expected to be
+          useful for verifying MTU of a connection.</t>
+     </list>
+     </t>
+
+   </section>
+
+   <section title="Echo Request Responder Behavior">
+      <t>An NSH node receiving an echo request MUST do the following:
+        <list style="numbers">
+          <t>Clone the NSH packet and contents verbatim</t>
+          <t>Change the Message Type from "Overlay Echo Request" to "Overlay Echo Reply" <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/></t>
+          <t>Send the NSH packet back to the initiator using the transport the echo request
+             was received on.</t>
+        </list>
+      </t>
+      <t>Note that for this type of OAM packet, the NSH packet is NOT forwarded
+         according to path ID and service index, rather MUST be returned to the
+         immediate peer. The echo is expected to work even when SFF forwarding tables
+         are empty or incomplete.</t>
+      <t>For example, an NSH packet transported directly over Ethernet MUST be
+         returned to the MAC address from which it was received.
+         As another example, an NSH packet received over UDP MUST be returned
+         to the IP address and UDP port the were the source address and ports
+         of the request.
+      </t>
+      <t>It might not be possible to use this OAM packet if there is not
+         an obvious way to return the packet to the sender.</t>
+   </section>
+
+   <section anchor="Acknowledgements" title="Acknowledgements">
+      <t>Thanks to the Overlay OAM Design team and authors of
+         <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/> for pointing
+         us an approach in common with other overlays.
+      </t>
+   </section>
+
+   <!-- Possibly a 'Contributors' section ... -->
+
+   <section anchor="IANA" title="IANA Considerations">
+     <t>TODO: Need to request any codes, subcodes or TLVs?</t>
+   </section>
+
+   <section anchor="Security" title="Security Considerations">
+     <t>To reduce any attack surface, the initiator should verify that the
+        received echo response is a response to the echo request it sent
+        by comparing the handle and sequence number fields.</t>
+   </section>
+ </middle>
+
+ <!--  *****BACK MATTER ***** -->
+
+ <back>
+   <!-- References split into informative and normative -->
+
+   <references title="Normative References">
+     <!--?rfc include="http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml"?-->
+     &RFC2119;
+     &RFC7665;
+     &I-D.draft-ooamdt-rtgwg-demand-cc-cv;
+   </references>
+
+ </back>
+</rfc>
