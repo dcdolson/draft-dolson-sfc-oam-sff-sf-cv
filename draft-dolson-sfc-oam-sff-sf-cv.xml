@@ -9,6 +9,7 @@
 <!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
 <!ENTITY RFC7665 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.7665.xml">
 <!ENTITY I-D.draft-ooamdt-rtgwg-demand-cc-cv SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-ooamdt-rtgwg-demand-cc-cv-00.xml">
+<!ENTITY I-D.draft-ooamdt-rtgwg-ooam-header SYSTEM "http://xml.resource.org/public/rfc/bibxml3/reference.I-D.draft-ooamdt-rtgwg-ooam-header-00.xml">
 
 ]>
 <?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
@@ -164,6 +165,7 @@
    </t>
    <t>
      By embedding the overlay ping packet format <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/> 
+     within the OAM header <xref target="I-D.ooamdt-rtgwg-ooam-header"/>
      in NSH, the packet format is that of <xref target="fig_packet"/>.
      The MD-type 2 is shown, since no metadata is required.
    </t>
@@ -175,7 +177,9 @@
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ \
 |Ver|O|C|R|R|R|R|R|R|  Length=2 |  MD-type=0x2  | OAM Proto=TBA1| |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ | NSH
-|          Service Path ID=0xffffff             | SI=0xff       | |
+|          Service Path ID=0xffffff             | SI=0xff       | /
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ \
+| V | Msg Type  |     Flags     |          Length               | | OAM
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ /
 |         Version Number        |         Global Flags          | \
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
@@ -184,7 +188,7 @@
 |                        Sender's Handle                        | | Ping
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
 |                         Sequence Number                       | |
-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ /
++-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ |
 |                             TLVs                              | |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ /
            ]]></artwork>
@@ -195,9 +199,13 @@
        <t>Length: Header length in words  </t>
        <t>MD-type: metadata type of 2 is used because no metadata is required.</t>
        <t>OAM Protocol: a value of TBA1 indicates the NSH header is followed by
-          an OAM Ping message.</t>
+          an OAM Header.</t>
        <t>Service Path ID: Should be set by sender to 0xffffff. Receiver should ignore it.</t>
        <t>Service Index: Should be set by sender to 255. Receiver should ignore it.</t>
+       <t>V: OAM header version should be set by sender to 0 (?)</t>
+       <t>Msg Type: value ? indicates OAM ping message follows the OAM header.</t>
+       <t>Flags: Value 0, indicating no extensions to the OAM header <xref target="I-D.ooamdt-rtgwg-ooam-header"/>.</t>
+       <t>Length: Length of the OAM Ping portion of the message <xref target="I-D.ooamdt-rtgwg-ooam-header"/>.</t>
        <t>Version Number: refer to <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/>  </t>
        <t>Global Flags: refer to <xref target="I-D.ooamdt-rtgwg-demand-cc-cv"/>  </t>
        <t>Message Type: Initiator (SFF) is to use the code for "Overlay Echo Request"
@@ -276,6 +284,7 @@
      &RFC2119;
      &RFC7665;
      &I-D.draft-ooamdt-rtgwg-demand-cc-cv;
+     &I-D.draft-ooamdt-rtgwg-ooam-header;
    </references>
 
  </back>
